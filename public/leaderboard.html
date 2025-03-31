@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ROOM OF HORROR Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Butcherman&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: sans-serif;
+      background-color: #bdfcc9;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      width: 95%;
+      max-width: 960px;
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
+
+    .leaderboard {
+      flex: 1;
+      text-align: center;
+    }
+
+    .curved-title-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 1rem 1rem 0.2rem;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+    }
+
+    .curved-title {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      flex-wrap: nowrap;
+      font-family: 'Creepster', cursive;
+      font-size: 4em;
+      color: darkred;
+      white-space: nowrap;
+      overflow: visible;
+      line-height: 1.2;
+      padding: 0 2vw;
+    }
+
+    .curved-title span {
+      display: inline-block;
+      transform-origin: bottom center;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 15px darkred,
+        0 0 20px darkred,
+        0 0 25px darkred;
+      padding: 0 2px;
+      position: relative;
+    }
+
+    .curved-title span:nth-child(1) { transform: rotate(-18deg); top: 10px; }
+    .curved-title span:nth-child(2) { transform: rotate(-13deg); top: 8px; }
+    .curved-title span:nth-child(3) { transform: rotate(-8deg); top: 6px; }
+    .curved-title span:nth-child(4) { transform: rotate(-5deg); top: 4px; }
+    .curved-title span:nth-child(5) { transform: rotate(0deg); top: 2px; }
+    .curved-title span:nth-child(6) { transform: rotate(3deg); top: 2px; }
+    .curved-title span:nth-child(7) { transform: rotate(6deg); top: 3px; }
+    .curved-title span:nth-child(8) { transform: rotate(9deg); top: 5px; }
+    .curved-title span:nth-child(9) { transform: rotate(12deg); top: 7px; }
+    .curved-title span:nth-child(10) { transform: rotate(15deg); top: 9px; }
+    .curved-title span:nth-child(11) { transform: rotate(18deg); top: 10px; }
+    .curved-title span:nth-child(12) { transform: rotate(20deg); top: 11px; }
+    .curved-title span:nth-child(13) { transform: rotate(22deg); top: 12px; }
+    .curved-title span:nth-child(14) { transform: rotate(24deg); top: 13px; }
+
+    h2 {
+      font-size: 2.2em;
+      font-family: 'Butcherman', cursive;
+      text-transform: uppercase;
+      color: #0b5309;
+      text-shadow: 0 0 4px white, 0 0 8px #2ed573, 0 0 12px #0b5309, 0 0 16px #0b5309;
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      border-collapse: collapse;
+      font-family: 'Lobster', cursive;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 0.95em;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f5f5dc;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #ffcc99;
+    }
+
+    tbody tr {
+      transition: all 0.4s ease-in-out;
+    }
+
+    .stopwatch {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-top: 3vh;
+      font-family: 'Creepster', cursive;
+      color: darkred;
+      text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px darkred;
+      font-size: 1.8em;
+      min-width: 120px;
+    }
+
+    .stopwatch-controls {
+      margin-top: 0.5em;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stopwatch-controls button {
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.6em;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .reset-button {
+    margin-top: 1vh;
+    padding: 0.6em 1.5em;
+    font-size: 0.5em;
+    font-family: 'Lobster', cursive;
+    background-color: darkred;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px red;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.reset-button:hover {
+  background-color: crimson;
+  transform: scale(1.05);
+}
+
+
+    .stopwatch-controls button:hover {
+      background-color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="curved-title-wrapper">
+    <div class="curved-title">
+      <span>R</span><span>O</span><span>O</span><span>M</span><span>&nbsp;</span>
+      <span>O</span><span>F</span><span>&nbsp;</span>
+      <span>H</span><span>O</span><span>R</span><span>R</span><span>O</span><span>R</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="leaderboard">
+      <h2>Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Position</th>
+            <th>Group Name</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="stopwatch">
+      <div id="timer">00:00</div>
+      <div class="stopwatch-controls">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="toggleTimer()">Pause</button>
+        <button onclick="resetTimer()">Reset</button>
+      </div>
+      <button id="reset-button" class="reset-button">Reset All Groups & Scores</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:3000');
+    const groupRows = {};
+    const tbody = document.querySelector("tbody");
+
+    function renderLeaderboard() {
+      const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
+      const existingRows = [...tbody.children];
+
+      sorted.forEach(([groupKey, { name, score }], index) => {
+        let row = document.getElementById(groupKey + "-row");
+        if (!row) {
+          row = document.createElement("tr");
+          row.id = groupKey + "-row";
+          row.style.opacity = 0;
+          setTimeout(() => (row.style.opacity = 1), 50);
+        }
+
+        row.innerHTML = `
+          <td>${index + 1}${getOrdinalSuffix(index + 1)} Place</td>
+          <td>${name}</td>
+          <td id="${groupKey}-score">${score}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Remove rows that are no longer active
+      existingRows.forEach(row => {
+        const key = row.id?.replace("-row", "");
+        if (!groupRows[key]) row.remove();
+      });
+    }
+
+    function getOrdinalSuffix(i) {
+      const j = i % 10, k = i % 100;
+      if (j == 1 && k != 11) return "st";
+      if (j == 2 && k != 12) return "nd";
+      if (j == 3 && k != 13) return "rd";
+      return "th";
+    }
+
+    socket.on('scoreUpdate', (updates) => {
+      for (const group in updates) {
+        const score = updates[group];
+        if (!group.startsWith('group') || typeof score !== 'number') continue;
+
+        if (!groupRows[group]) {
+          const number = group.replace('group', '');
+          groupRows[group] = { name: `Group ${number}`, score: 0 };
+        }
+
+        groupRows[group].score = score;
+      }
+
+      renderLeaderboard();
+    });
+
+    // Stopwatch logic
+    let time = 0;
+    let interval = null;
+    let running = false;
+
+    function updateDisplay() {
+      const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+      const seconds = String(time % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    }
+
+    function startTimer() {
+      if (!interval) {
+        interval = setInterval(() => {
+          if (running) {
+            time++;
+            updateDisplay();
+          }
+        }, 1000);
+      }
+      running = true;
+    }
+
+    function toggleTimer() {
+      running = !running;
+    }
+
+    function resetTimer() {
+      time = 0;
+      updateDisplay();
+      running = false;
+    }
+
+    updateDisplay();
+
+    document.getElementById('reset-button').addEventListener('click', async () => {
+  const confirmReset = confirm("Are you sure you want to reset all groups and scores?");
+  if (!confirmReset) return;
+
+  try {
+    const res = await fetch('/reset');
+    const text = await res.text();
+    alert(text); // Show success message from server
+  } catch (err) {
+    console.error(err);
+    alert("Failed to reset. Please try again.");
+  }
+});
+
+  </script>
+</body>
+</html>

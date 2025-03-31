@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Room of Horror</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: sans-serif;
+      background-color: #a7dca7;
+    }
+
+    h1 {
+      text-align: center;
+      font-family: 'Creepster', cursive;
+      font-size: clamp(6rem, 4vw, 2.5rem);
+      text-transform: uppercase;
+      color: rgb(115, 7, 7);
+      background-color: transparent;
+      text-shadow:
+      0 0 5px white,
+      0 0 10px white,
+      0 0 15px darkred,
+      0 0 20px darkred; /* Layered glow effect */
+      padding: 0.5rem; /* Optional: to separate from grey bg */
+    }
+
+    .scroll-container {
+      overflow-x: auto;
+      width: 100%;
+    }
+
+    .table-flex-wrapper {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+    }
+    /* .room2-narrow td,
+    .room2-narrow th {
+        width: 90%;
+    } */
+    .table-section {
+      flex: 1;
+    }
+
+    table.equal-width {
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .equal-width td,
+    .equal-width th {
+      width: 6.25vw;
+      min-width: 6.25vw;
+      max-width: 6.25vw;
+      white-space: nowrap;
+    }
+
+    th, td {
+      border: 1px solid black;
+      padding: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    select {
+      width: 100%;
+      font-size: clamp(10px, 0.9vw, 14px);
+      border-radius: 20px; /* 👈 rounds the corners */
+      box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        border: 0.5px solid #333; /* optional: make border visible */
+        padding: 2px 4px;       /* optional: space inside */
+    }
+
+    .room-heading {
+      font-family: 'Lobster', cursive;
+      font-size: clamp(1rem, 1.5vw, 1.2rem);
+      border: 3px solid black !important;
+    }
+    /* Thicker borders for the label row (first row after heading) */
+    th.room-label,
+    td.room-label {
+    border: 3px solid black !important;
+}
+
+  </style>
+</head>
+<body>
+  <h1>Room of Horror</h1>
+  <div class="scroll-container">
+    <form>
+      <div class="table-flex-wrapper">
+
+        <!-- Room 1 -->
+        <div class="table-section" style="background-color: #fffdd0;">
+          <table class="equal-width">
+            <tr>
+              <th colspan="4" class="room-heading" style="background-color: #fffdd0;">Room 1</th>
+            </tr>
+            <tr id="room1-labels"></tr>
+            <tr id="room1-row-0"></tr>
+            <tr id="room1-row-1"></tr>
+            <tr id="room1-row-2"></tr>
+            <tr id="room1-row-3"></tr>
+            <tr id="room1-row-4"></tr>
+            <tr id="room1-row-5"></tr>
+            <tr id="room1-row-6"></tr>
+          </table>
+        </div>
+
+        <!-- Room 2 -->
+        <div class="table-section" style="background-color: #dceeff;">
+            <table class="equal-width">
+            <tr>
+              <th colspan="3" class="room-heading" style="background-color: #dceeff;">Room 2</th>
+            </tr>
+            <tr id="room2-labels"></tr>
+            <tr id="room2-row-0"></tr>
+            <tr id="room2-row-1"></tr>
+            <tr id="room2-row-2"></tr>
+            <tr id="room2-row-3"></tr>
+            <tr id="room2-row-4"></tr>
+            <tr id="room2-row-5"></tr>
+            <tr id="room2-row-6"></tr>
+          </table>
+        </div>
+
+        <!-- The Patient's Bed -->
+        <div class="table-section" style="background-color: #ffe6ee;">
+          <table class="equal-width">
+            <tr>
+              <th colspan="9" class="room-heading" style="background-color: #ffe6ee;">The Patient's Bed</th>
+            </tr>
+            <tr id="bed-labels"></tr>
+            <tr id="bed-row-0"></tr>
+            <tr id="bed-row-1"></tr>
+            <tr id="bed-row-2"></tr>
+            <tr id="bed-row-3"></tr>
+            <tr id="bed-row-4"></tr>
+            <tr id="bed-row-5"></tr>
+            <tr id="bed-row-6"></tr>
+          </table>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function createSelect(name, options) {
+      const select = document.createElement('select');
+      select.name = name;
+
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '';
+      select.appendChild(blank);
+
+      options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+
+      return select;
+    }
+
+    function createRoom(columns, labelPrefix) {
+      const labelsRow = document.getElementById(`${labelPrefix}-labels`);
+      const rows = Array.from({ length: 7 }, (_, i) => document.getElementById(`${labelPrefix}-row-${i}`));
+      const colKeys = Object.keys(columns);
+
+      colKeys.forEach((label, colIndex) => {
+        const options = columns[label];
+
+        const labelCell = document.createElement('td');
+        labelCell.textContent = label;
+        labelCell.classList.add('room-label');
+        labelCell.style.fontFamily = 'Lobster';
+        labelCell.style.fontSize = 'clamp(9px, 1vw, 11px)';
+        labelsRow.appendChild(labelCell);
+
+        rows.forEach((row, rowIndex) => {
+          const cell = document.createElement('td');
+          const select = createSelect(`${labelPrefix}-${label}-${rowIndex}`, options);
+          select.classList.add(`${labelPrefix}-col-${colIndex}`);
+          cell.appendChild(select);
+          row.appendChild(cell);
+        });
+
+        document.querySelectorAll(`.${labelPrefix}-col-${colIndex}`).forEach(select => {
+          select.addEventListener('change', () => updateDropdownsRoom(labelPrefix, colIndex, columns[label]));
+        });
+      });
+    }
+
+    function updateDropdownsRoom(prefix, colIndex, options) {
+      const colClass = `${prefix}-col-${colIndex}`;
+      const selects = document.querySelectorAll(`.${colClass}`);
+      const selectedValues = Array.from(selects).map(s => s.value).filter(v => v);
+
+      selects.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '';
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '';
+        select.appendChild(blank);
+
+        options.forEach(opt => {
+          if (!selectedValues.includes(opt) || opt === currentValue) {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            select.appendChild(option);
+          }
+        });
+
+        select.value = currentValue;
+      });
+    }
+
+    const room1 = {
+      "Doors": ["Door open", "Door closed", "Wrong type of door"],
+      "Trolley": ["Empty masks box", "No non-sterile gowns", "No sterile gloves", "No sterile gowns", "No antiseptic wipes/handgel"],
+      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue box"],
+      "Bed End Table": ["Food on the table", "Overflowing sharps bin", "Medication on table", "High risk medication on the table"]
+    };
+
+    const room2 = {
+      "Nurse": ["Appropriate Attire", "Not bare below the elbow", "Appropriate Jewelry", "Not wearing gloves", "Loose Headscarf", "Wearing colour", "Culturally appropriate sleeves"],
+      "Antibiotic": ["Appropriate antibiotic", "Not appropriate antibiotic", "Not an antibiotic"],
+      "Sign on Bed": ["Correct name", "Incorrect name", "Calling bell location", "Socket locations"]
+    };
+
+    const bed = {
+      "Patient's Head": ["Inappropriate oxygen mask", "Inappropriate position of oxygen mask", "IV tubing location", "Blood stained clothes"],
+      "Left Arm": ["Blood Pressure cuff present", "Tourniquet present", "Cannula present", "Infection at cannula site", "Cannula not closed"],
+      "Blood Unit": ["Wrong blood group", "Wrong name", "Wrong DOB", "Wrong patient ID"],
+      "Oxygen Probe": ["Connected", "Not Connected", "Wrong hand"],
+      "Catheter": ["Urine leak", "Urine bag on the floor", "Wrong type of urine bag"],
+      "Fall Risk": ["None identified", "Crutches not appropriate distance", "Bed height not appropriate", "Bed side rails not elevated", "Non grip slippers", "Slippers present"],
+      "Fluids": ["Syringe pump paused", "Inappropriate medication", "Wrong flow rate"],
+      "Bedside Cupboard": ["Presence of telephone", "Presence of medication in the cup", "Presence of medication bottle", "Presence of medication on the table", "Oxygen tubing on the table"],
+      "Second Patient": ["Paediatric patient should not be present", "Neonate patient should not be present", "Another patient should not be present", "A second bed should not be present"]
+    };
+
+    createRoom(room1, 'room1');
+    createRoom(room2, 'room2');
+    createRoom(bed, 'bed');
+  </script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ROOM OF HORROR Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Butcherman&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  font-family: sans-serif;
+  background-color: #bdfcc9;
+  overflow-x: visible; /* Allow horizontal overflow to show full glow */
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.curved-title-wrapper {
+  width: 100%;
+  overflow: visible;
+  padding: 0 2rem; /* Add horizontal space */
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+
+    .curved-title {
+      display: flex;
+      font-family: 'Creepster', cursive;
+      font-size: 4em;
+      color: darkred;
+      white-space: nowrap;
+      overflow: visible;
+    }
+
+    .curved-title span {
+      display: inline-block;
+      transform-origin: bottom center;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 15px darkred,
+        0 0 20px darkred;
+      padding: 0 2px;
+      position: relative;
+    }
+
+    .curved-title span:nth-child(1) { transform: rotate(-18deg); top: 10px; }
+    .curved-title span:nth-child(2) { transform: rotate(-13deg); top: 8px; }
+    .curved-title span:nth-child(3) { transform: rotate(-8deg); top: 6px; }
+    .curved-title span:nth-child(4) { transform: rotate(-5deg); top: 4px; }
+    .curved-title span:nth-child(5) { transform: rotate(0deg); top: 2px; }
+    .curved-title span:nth-child(6) { transform: rotate(3deg); top: 2px; }
+    .curved-title span:nth-child(7) { transform: rotate(6deg); top: 3px; }
+    .curved-title span:nth-child(8) { transform: rotate(9deg); top: 5px; }
+    .curved-title span:nth-child(9) { transform: rotate(12deg); top: 7px; }
+    .curved-title span:nth-child(10) { transform: rotate(15deg); top: 9px; }
+    .curved-title span:nth-child(11) { transform: rotate(18deg); top: 10px; }
+    .curved-title span:nth-child(12) { transform: rotate(20deg); top: 11px; }
+    .curved-title span:nth-child(13) { transform: rotate(22deg); top: 12px; }
+    .curved-title span:nth-child(14) { transform: rotate(24deg); top: 13px; }
+
+    h2 {
+      font-size: 2.2em;
+      font-family: 'Butcherman', cursive;
+      text-transform: uppercase;
+      color: #0b5309;
+      text-shadow: 0 0 4px white, 0 0 8px #2ed573, 0 0 12px #0b5309, 0 0 16px #0b5309;
+      margin: 0.2em 0;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 95%;
+      max-width: 960px;
+    }
+
+    .leaderboard {
+      flex: 1;
+    }
+
+    table {
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: 'Lobster', cursive;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 0.95em;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f5f5dc;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #ffcc99;
+    }
+
+    .score-cell, .group-cell {
+      transition: all 0.4s ease;
+    }
+
+    .highlight {
+      transform: scale(1.1);
+      background-color: #ffe066;
+    }
+
+    .stopwatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Creepster', cursive;
+      color: darkred;
+      text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px darkred;
+      font-size: 1.8em;
+      margin-left: 2rem;
+      margin-top: 2rem;
+    }
+
+    .stopwatch-controls {
+      margin-top: 0.5em;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stopwatch-controls button {
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.6em;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .stopwatch-controls button:hover {
+      background-color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .stopwatch {
+        margin-left: 0;
+        margin-top: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="curved-title-wrapper">
+    <div class="curved-title">
+      <span>R</span><span>O</span><span>O</span><span>M</span><span>&nbsp;</span>
+      <span>O</span><span>F</span><span>&nbsp;</span>
+      <span>H</span><span>O</span><span>R</span><span>R</span><span>O</span><span>R</span>
+    </div>
+  </div>
+
+  <h2>Leaderboard</h2>
+
+  <div class="container">
+    <div class="leaderboard">
+      <table>
+        <thead>
+          <tr>
+            <th>Position</th>
+            <th>Group Name</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1st Place</td><td class="group-cell" id="group1-name">Group 1</td><td class="score-cell" id="group1-score">0</td></tr>
+          <tr><td>2nd Place</td><td class="group-cell" id="group2-name">Group 2</td><td class="score-cell" id="group2-score">0</td></tr>
+          <tr><td>3rd Place</td><td class="group-cell" id="group3-name">Group 3</td><td class="score-cell" id="group3-score">0</td></tr>
+          <tr><td>4th Place</td><td class="group-cell" id="group4-name">Group 4</td><td class="score-cell" id="group4-score">0</td></tr>
+          <tr><td>5th Place</td><td class="group-cell" id="group5-name">Group 5</td><td class="score-cell" id="group5-score">0</td></tr>
+          <tr><td>6th Place</td><td class="group-cell" id="group6-name">Group 6</td><td class="score-cell" id="group6-score">0</td></tr>
+          <tr><td>7th Place</td><td class="group-cell" id="group7-name">Group 7</td><td class="score-cell" id="group7-score">0</td></tr>
+          <tr><td>8th Place</td><td class="group-cell" id="group8-name">Group 8</td><td class="score-cell" id="group8-score">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stopwatch">
+      <div id="timer">00:00</div>
+      <div class="stopwatch-controls">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="toggleTimer()">Pause</button>
+        <button onclick="resetTimer()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:3000');
+
+    const groupRows = {
+      group1: { name: "Group 1", score: 0 },
+      group2: { name: "Group 2", score: 0 },
+      group3: { name: "Group 3", score: 0 },
+      group4: { name: "Group 4", score: 0 },
+      group5: { name: "Group 5", score: 0 },
+      group6: { name: "Group 6", score: 0 },
+      group7: { name: "Group 7", score: 0 },
+      group8: { name: "Group 8", score: 0 }
+    };
+
+    function updateLeaderboard() {
+      const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
+      sorted.forEach(([groupKey, { name, score }], index) => {
+        const nameCell = document.getElementById(`group${index + 1}-name`);
+        const scoreCell = document.getElementById(`group${index + 1}-score`);
+
+        if (nameCell.textContent !== name || scoreCell.textContent != score) {
+          nameCell.classList.add("highlight");
+          scoreCell.classList.add("highlight");
+
+          setTimeout(() => {
+            nameCell.textContent = name;
+            scoreCell.textContent = score;
+            nameCell.classList.remove("highlight");
+            scoreCell.classList.remove("highlight");
+          }, 250);
+        }
+      });
+    }
+
+    function getOrdinalSuffix(i) {
+      const j = i % 10, k = i % 100;
+      if (j == 1 && k != 11) return "st";
+      if (j == 2 && k != 12) return "nd";
+      if (j == 3 && k != 13) return "rd";
+      return "th";
+    }
+
+    socket.on('scoreUpdate', (updates) => {
+      for (const group in updates) {
+        if (groupRows[group]) {
+          groupRows[group].score = updates[group];
+        }
+      }
+      updateLeaderboard();
+    });
+
+    updateLeaderboard();
+
+    // Stopwatch
+    let time = 0, interval = null, running = false;
+
+    function updateDisplay() {
+      const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+      const seconds = String(time % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    }
+
+    function startTimer() {
+      if (!interval) {
+        interval = setInterval(() => {
+          if (running) {
+            time++;
+            updateDisplay();
+          }
+        }, 1000);
+      }
+      running = true;
+    }
+
+    function toggleTimer() {
+      running = !running;
+    }
+
+    function resetTimer() {
+      time = 0;
+      updateDisplay();
+      running = false;
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
