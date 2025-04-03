@@ -361,7 +361,7 @@
       const container = document.getElementById('awards-container');
       container.innerHTML += `
         <div class="award first-place">
-          <img src="public/firstplacepic.png" alt="Blue Ribbon" />
+          <img src="firstplacepic.png" alt="Blue Ribbon" />
           <span>🏆 1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
         </div>
       `;
@@ -373,7 +373,7 @@
       if (!worstGroup) return;
       container.innerHTML += `
         <div class="award most-incorrect">
-          <img src="public/mostincorrectpic.png" alt="Court Jester" />
+          <img src="mostincorrectpic.png" alt="Court Jester" />
           <span>🃏 MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
         </div>
       `;
@@ -385,7 +385,7 @@
       if (!indecisiveGroup) return;
       container.innerHTML += `
         <div class="award most-selections">
-          <img src="public/noideapic.png" alt="Confused Person" />
+          <img src="firstplacepic.png" alt="Confused Person" />
           <span>🤯 MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
         </div>
       `;
