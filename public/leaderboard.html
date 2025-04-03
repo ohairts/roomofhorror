@@ -173,32 +173,69 @@
       transform: scale(1.05);
     }
 
-    .award {
-      position: relative;
-      margin-top: 1em;
-      animation: floatUp 3s ease-out forwards;
-      font-family: 'Lobster', cursive;
-      text-align: center;
-    }
-
-    .award img {
-      max-width: 120px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    .award span {
-      display: block;
-      margin-top: 0.5em;
-      font-size: 1.3em;
-      color: darkred;
-      text-shadow: 1px 1px white;
-    }
-
     @keyframes floatUp {
       0% { opacity: 0; transform: translateY(30px) scale(0.9); }
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    @keyframes pulseGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.award {
+  position: fixed;
+  max-width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  animation: pulseGlow 2.5s infinite, floatUp 1.5s ease-out forwards;
+  font-family: 'Lobster', cursive;
+  text-align: center;
+  z-index: 9999;
+}
+
+.award img {
+  max-width: 100px;
+  display: block;
+  margin: 0 auto;
+}
+
+.award span {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: darkred;
+  text-shadow: 1px 1px #fff;
+}
+
+.award.first-place {
+  top: 20px;
+  right: 20px;
+}
+
+.award.most-incorrect {
+  bottom: 20px;
+  right: 20px;
+}
+
+.award.most-selections {
+  bottom: 20px;
+  left: 20px;
+}
+
   </style>
 </head>
 <body>
@@ -235,7 +272,7 @@
     </div>
   </div>
 
-  <div id="awards-container" style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none;"></div>
+  <div id="awards-container"></div>
 
   <script>
     let blueRibbonShown = false;
@@ -323,9 +360,9 @@
     function showBlueRibbon(groupKey) {
       const container = document.getElementById('awards-container');
       container.innerHTML += `
-        <div class="award">
-          <img src="/mnt/data/firstplacepic.png" alt="Blue Ribbon" />
-          <span>1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
+        <div class="award first-place">
+          <img src="public/firstplacepic.png" alt="Blue Ribbon" />
+          <span>🏆 1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
         </div>
       `;
     }
@@ -335,9 +372,9 @@
       const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
       if (!worstGroup) return;
       container.innerHTML += `
-        <div class="award">
-          <img src="/mnt/data/mostincorrectpic.png" alt="Court Jester" />
-          <span>MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
+        <div class="award most-incorrect">
+          <img src="public/mostincorrectpic.png" alt="Court Jester" />
+          <span>🃏 MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
         </div>
       `;
     }
@@ -347,9 +384,9 @@
       const indecisiveGroup = Object.entries(selectionTotals).sort((a, b) => b[1] - a[1])[0];
       if (!indecisiveGroup) return;
       container.innerHTML += `
-        <div class="award">
-          <img src="/mnt/data/noideapic.png" alt="Confused Person" />
-          <span>MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
+        <div class="award most-selections">
+          <img src="public/noideapic.png" alt="Confused Person" />
+          <span>🤯 MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
         </div>
       `;
     }
