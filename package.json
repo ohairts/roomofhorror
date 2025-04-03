@@ -1,13 +1,20 @@
 {
-  "name": "javascripttraining",
+  "name": "roomofhorror",
   "version": "1.0.0",
+  "description": "Multiplayer horror-themed leaderboard game with live socket updates",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "multiplayer",
+    "socket.io",
+    "horror",
+    "leaderboard",
+    "game"
+  ],
+  "author": "ohairts",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
@@ -22,6 +29,5 @@
   "bugs": {
     "url": "https://github.com/ohairts/roomofhorror/issues"
   },
-  "homepage": "https://github.com/ohairts/roomofhorror#readme",
-  "description": ""
+  "homepage": "https://github.com/ohairts/roomofhorror#readme"
 }

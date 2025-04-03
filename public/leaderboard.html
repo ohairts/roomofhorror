@@ -190,6 +190,33 @@
         flex-direction: column;
         align-items: center;
       }
+      .award {
+  position: relative;
+  margin-top: 1em;
+  animation: floatUp 3s ease-out forwards;
+  font-family: 'Lobster', cursive;
+  text-align: center;
+}
+
+.award img {
+  max-width: 120px;
+  display: block;
+  margin: 0 auto;
+}
+
+.award span {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 1.3em;
+  color: darkred;
+  text-shadow: 1px 1px white;
+}
+
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
     }
   </style>
 </head>
@@ -280,10 +307,33 @@
         }
 
         groupRows[group].score = score;
+
+        if (score === 39 && !document.getElementById('awards-container').innerHTML.includes("Blue Ribbon")) {
+        const container = document.getElementById('awards-container');
+        container.innerHTML += `
+         <div class="award">
+            <img src="https://i.imgur.com/eW1InjC.png" alt="Blue Ribbon" />
+            <span>1st Place - ${groupRows[group]?.name}</span>
+          </div>
+  `;
+}
       }
+
 
       renderLeaderboard();
     });
+  
+    let plusOneSetCounts = {};
+let minusHalfSetCounts = {};
+let selectionTotals = {};
+
+socket.on('selectionData', (data) => {
+  for (const group in data) {
+    plusOneSetCounts[group] = data[group].plusOneSet || 0;
+    minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
+    selectionTotals[group] = (data[group].plusOneSet || 0) + (data[group].minusHalfSet || 0);
+  }
+});
 
     // Stopwatch logic
     let time = 0;
@@ -302,11 +352,57 @@
           if (running) {
             time++;
             updateDisplay();
+
+            if (time === 1200) { // 60 minutes
+              showAwards();
+            }
           }
         }, 1000);
       }
       running = true;
     }
+
+
+
+function showAwards() {
+  const container = document.getElementById('awards-container');
+  container.innerHTML = ''; // Clear previous
+
+  // 1st Place Ribbon
+  const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0];
+  const topGroupKey = topGroup?.[0];
+  const topGroupValue = topGroup?.[1];
+  if (topGroupValue >= 0) {
+    container.innerHTML += `
+      <div class="award">
+        <img src="https://i.imgur.com/eW1InjC.png" alt="Blue Ribbon" />
+        <span>1st Place - ${groupRows[topGroupKey]?.name || topGroupKey}</span>
+      </div>
+    `;
+  }
+
+  // Most Incorrect Answers (minusHalfSet)
+  const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
+  if (worstGroup) {
+    container.innerHTML += `
+      <div class="award">
+        <img src="https://i.imgur.com/NjHep5P.gif" alt="Court Jester" />
+        <span>MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
+      </div>
+    `;
+  }
+
+  // Most Selections Total (plusOneSet + minusHalfSet)
+  const indecisiveGroup = Object.entries(selectionTotals).sort((a, b) => b[1] - a[1])[0];
+  if (indecisiveGroup) {
+    container.innerHTML += `
+      <div class="award">
+        <img src="https://i.imgur.com/dwqj9Tt.png" alt="Confused Person" />
+        <span>MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
+      </div>
+    `;
+  }
+}
 
     function toggleTimer() {
       running = !running;
@@ -335,5 +431,6 @@
 });
 
   </script>
+  <div id="awards-container" style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none;"></div>
 </body>
 </html>
