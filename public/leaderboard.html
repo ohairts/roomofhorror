@@ -127,10 +127,6 @@
       background-color: #ffcc99;
     }
 
-    tbody tr {
-      transition: all 0.4s ease-in-out;
-    }
-
     .stopwatch {
       display: flex;
       flex-direction: column;
@@ -141,14 +137,6 @@
       color: darkred;
       text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px darkred;
       font-size: 1.8em;
-      min-width: 120px;
-    }
-
-    .stopwatch-controls {
-      margin-top: 0.5em;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
     }
 
     .stopwatch-controls button {
@@ -159,64 +147,57 @@
       padding: 4px 6px;
       cursor: pointer;
       transition: background 0.2s ease-in-out;
+      margin-top: 5px;
     }
-
-    .reset-button {
-    margin-top: 1vh;
-    padding: 0.6em 1.5em;
-    font-size: 0.5em;
-    font-family: 'Lobster', cursive;
-    background-color: darkred;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 0 10px red;
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.reset-button:hover {
-  background-color: crimson;
-  transform: scale(1.05);
-}
-
 
     .stopwatch-controls button:hover {
       background-color: #555;
     }
 
-    @media (max-width: 600px) {
-      .container {
-        flex-direction: column;
-        align-items: center;
-      }
-      .award {
-  position: relative;
-  margin-top: 1em;
-  animation: floatUp 3s ease-out forwards;
-  font-family: 'Lobster', cursive;
-  text-align: center;
-}
+    .reset-button {
+      margin-top: 1vh;
+      padding: 0.6em 1.5em;
+      font-size: 0.5em;
+      font-family: 'Lobster', cursive;
+      background-color: darkred;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px red;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
 
-.award img {
-  max-width: 120px;
-  display: block;
-  margin: 0 auto;
-}
+    .reset-button:hover {
+      background-color: crimson;
+      transform: scale(1.05);
+    }
 
-.award span {
-  display: block;
-  margin-top: 0.5em;
-  font-size: 1.3em;
-  color: darkred;
-  text-shadow: 1px 1px white;
-}
+    .award {
+      position: relative;
+      margin-top: 1em;
+      animation: floatUp 3s ease-out forwards;
+      font-family: 'Lobster', cursive;
+      text-align: center;
+    }
 
-@keyframes floatUp {
-  0% { opacity: 0; transform: translateY(30px) scale(0.9); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
+    .award img {
+      max-width: 120px;
+      display: block;
+      margin: 0 auto;
+    }
 
+    .award span {
+      display: block;
+      margin-top: 0.5em;
+      font-size: 1.3em;
+      color: darkred;
+      text-shadow: 1px 1px white;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
   </style>
 </head>
@@ -247,7 +228,6 @@
     <div class="stopwatch">
       <div id="timer">00:00</div>
       <div class="stopwatch-controls">
-        <button onclick="startTimer()">Start</button>
         <button onclick="toggleTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
       </div>
@@ -255,10 +235,55 @@
     </div>
   </div>
 
+  <div id="awards-container" style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none;"></div>
+
   <script>
+    let blueRibbonShown = false;
+    let incorrectAwardShown = false;
+    let selectionAwardShown = false;
+
     const socket = io('https://roomofhorror.onrender.com');
     const groupRows = {};
     const tbody = document.querySelector("tbody");
+
+    let plusOneSetCounts = {};
+    let minusHalfSetCounts = {};
+    let selectionTotals = {};
+
+    socket.on('selectionData', (data) => {
+      for (const group in data) {
+        plusOneSetCounts[group] = data[group].plusOneSet || 0;
+        minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
+        selectionTotals[group] = (data[group].plusOneSet || 0) + (data[group].minusHalfSet || 0);
+      }
+    });
+
+    socket.on('scoreUpdate', (updates) => {
+      for (const group in updates) {
+        const score = updates[group];
+        if (!group.startsWith('group') || typeof score !== 'number') continue;
+
+        if (!groupRows[group]) {
+          const number = group.replace('group', '');
+          groupRows[group] = { name: `Group ${number}`, score: 0 };
+        }
+
+        groupRows[group].score = score;
+
+        if (score === 39 && !blueRibbonShown) {
+          blueRibbonShown = true;
+          showBlueRibbon(group);
+          maybeShowOtherAwards();
+        }
+
+        if (score <= -15.5 && !incorrectAwardShown) {
+          incorrectAwardShown = true;
+          showIncorrectAward();
+        }
+      }
+
+      renderLeaderboard();
+    });
 
     function renderLeaderboard() {
       const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
@@ -281,7 +306,6 @@
         tbody.appendChild(row);
       });
 
-      // Remove rows that are no longer active
       existingRows.forEach(row => {
         const key = row.id?.replace("-row", "");
         if (!groupRows[key]) row.remove();
@@ -296,46 +320,51 @@
       return "th";
     }
 
-    socket.on('scoreUpdate', (updates) => {
-      for (const group in updates) {
-        const score = updates[group];
-        if (!group.startsWith('group') || typeof score !== 'number') continue;
+    function showBlueRibbon(groupKey) {
+      const container = document.getElementById('awards-container');
+      container.innerHTML += `
+        <div class="award">
+          <img src="/mnt/data/firstplacepic.png" alt="Blue Ribbon" />
+          <span>1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
+        </div>
+      `;
+    }
 
-        if (!groupRows[group]) {
-          const number = group.replace('group', '');
-          groupRows[group] = { name: `Group ${number}`, score: 0 };
-        }
+    function showIncorrectAward() {
+      const container = document.getElementById('awards-container');
+      const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
+      if (!worstGroup) return;
+      container.innerHTML += `
+        <div class="award">
+          <img src="/mnt/data/mostincorrectpic.png" alt="Court Jester" />
+          <span>MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
+        </div>
+      `;
+    }
 
-        groupRows[group].score = score;
+    function showSelectionAward() {
+      const container = document.getElementById('awards-container');
+      const indecisiveGroup = Object.entries(selectionTotals).sort((a, b) => b[1] - a[1])[0];
+      if (!indecisiveGroup) return;
+      container.innerHTML += `
+        <div class="award">
+          <img src="/mnt/data/noideapic.png" alt="Confused Person" />
+          <span>MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
+        </div>
+      `;
+    }
 
-        if (score === 39 && !document.getElementById('awards-container').innerHTML.includes("Blue Ribbon")) {
-        const container = document.getElementById('awards-container');
-        container.innerHTML += `
-         <div class="award">
-            <img src="https://i.imgur.com/eW1InjC.png" alt="Blue Ribbon" />
-            <span>1st Place - ${groupRows[group]?.name}</span>
-          </div>
-  `;
-}
+    function maybeShowOtherAwards() {
+      if (!incorrectAwardShown) {
+        incorrectAwardShown = true;
+        showIncorrectAward();
       }
+      if (!selectionAwardShown) {
+        selectionAwardShown = true;
+        showSelectionAward();
+      }
+    }
 
-
-      renderLeaderboard();
-    });
-  
-    let plusOneSetCounts = {};
-let minusHalfSetCounts = {};
-let selectionTotals = {};
-
-socket.on('selectionData', (data) => {
-  for (const group in data) {
-    plusOneSetCounts[group] = data[group].plusOneSet || 0;
-    minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
-    selectionTotals[group] = (data[group].plusOneSet || 0) + (data[group].minusHalfSet || 0);
-  }
-});
-
-    // Stopwatch logic
     let time = 0;
     let interval = null;
     let running = false;
@@ -353,56 +382,21 @@ socket.on('selectionData', (data) => {
             time++;
             updateDisplay();
 
-            if (time === 1200) { // 60 minutes
-              showAwards();
+            if (time === 1200) {
+              if (!blueRibbonShown) {
+                const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+                if (topGroup) {
+                  blueRibbonShown = true;
+                  showBlueRibbon(topGroup);
+                }
+              }
+              maybeShowOtherAwards();
             }
           }
         }, 1000);
       }
       running = true;
     }
-
-
-
-function showAwards() {
-  const container = document.getElementById('awards-container');
-  container.innerHTML = ''; // Clear previous
-
-  // 1st Place Ribbon
-  const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0];
-  const topGroupKey = topGroup?.[0];
-  const topGroupValue = topGroup?.[1];
-  if (topGroupValue >= 0) {
-    container.innerHTML += `
-      <div class="award">
-        <img src="https://i.imgur.com/eW1InjC.png" alt="Blue Ribbon" />
-        <span>1st Place - ${groupRows[topGroupKey]?.name || topGroupKey}</span>
-      </div>
-    `;
-  }
-
-  // Most Incorrect Answers (minusHalfSet)
-  const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
-  if (worstGroup) {
-    container.innerHTML += `
-      <div class="award">
-        <img src="https://i.imgur.com/NjHep5P.gif" alt="Court Jester" />
-        <span>MOST INCORRECT ANSWERS - ${groupRows[worstGroup[0]]?.name || worstGroup[0]}</span>
-      </div>
-    `;
-  }
-
-  // Most Selections Total (plusOneSet + minusHalfSet)
-  const indecisiveGroup = Object.entries(selectionTotals).sort((a, b) => b[1] - a[1])[0];
-  if (indecisiveGroup) {
-    container.innerHTML += `
-      <div class="award">
-        <img src="https://i.imgur.com/dwqj9Tt.png" alt="Confused Person" />
-        <span>MOST SELECTIONS MADE - ${groupRows[indecisiveGroup[0]]?.name || indecisiveGroup[0]}</span>
-      </div>
-    `;
-  }
-}
 
     function toggleTimer() {
       running = !running;
@@ -414,23 +408,21 @@ function showAwards() {
       running = false;
     }
 
-    updateDisplay();
+    window.onload = startTimer;
 
     document.getElementById('reset-button').addEventListener('click', async () => {
-  const confirmReset = confirm("Are you sure you want to reset all groups and scores?");
-  if (!confirmReset) return;
+      const confirmReset = confirm("Are you sure you want to reset all groups and scores?");
+      if (!confirmReset) return;
 
-  try {
-    const res = await fetch('/reset');
-    const text = await res.text();
-    alert(text); // Show success message from server
-  } catch (err) {
-    console.error(err);
-    alert("Failed to reset. Please try again.");
-  }
-});
-
+      try {
+        const res = await fetch('/reset');
+        const text = await res.text();
+        alert(text);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to reset. Please try again.");
+      }
+    });
   </script>
-  <div id="awards-container" style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none;"></div>
 </body>
 </html>
