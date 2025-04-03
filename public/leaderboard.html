@@ -148,13 +148,12 @@
       margin-top: 0.5em;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .stopwatch-controls button {
       background-color: #333;
       color: white;
-      border: none;
       border-radius: 4px;
       font-size: 0.6em;
       padding: 4px 6px;
@@ -230,7 +229,7 @@
   </div>
 
   <script>
-    const socket = io('http://localhost:3000');
+    const socket = io('https://roomofhorror.onrender.com');
     const groupRows = {};
     const tbody = document.querySelector("tbody");
 

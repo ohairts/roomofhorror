@@ -14,5 +14,14 @@
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
   },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ohairts/roomofhorror.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ohairts/roomofhorror/issues"
+  },
+  "homepage": "https://github.com/ohairts/roomofhorror#readme",
   "description": ""
 }

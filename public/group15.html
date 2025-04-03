@@ -18,7 +18,7 @@
     h1 {
       text-align: center;
       font-family: 'Creepster', cursive;
-      font-size: clamp(6rem, 4vw, 2.5rem);
+      font-size: clamp(6rem, 4vw, 12rem);
       text-transform: uppercase;
       color: rgb(115, 7, 7);
       text-shadow: 0 0 5px white, 0 0 10px white, 0 0 15px darkred, 0 0 20px darkred;
@@ -119,32 +119,40 @@
   </div>
 
   <script>
-    const socket = io('http://localhost:3000');
+    const socket = io('https://roomofhorror.onrender.com');
 
     const plusOneSet = new Set([
-      "Door open", "Empty masks box", "No sterile gloves", "No sterile gowns", "No antiseptic wipes/handgel",
-      "Overflowing trash", "Inappropriate disposal of clinical waste", "Empty tissue box", "Food on the table",
-      "Overflowing sharps bin", "Medication on table", "High risk medication on the table",
-      "Not bare below the elbow", "Not wearing gloves", "Loose Headscarf",
-      "Not appropriate antibiotic", "Not an antibiotic", "Incorrect name",
-      "Calling bell location", "Socket locations", "Inappropriate oxygen mask",
-      "Inappropriate position of oxygen mask", "IV tubing location", "Blood stained clothes",
-      "Tourniquet present", "Infection at cannula site", "Cannula not closed",
-      "Wrong blood group", "Wrong name", "Wrong DOB", "Wrong patient ID",
-      "Not Connected", "Wrong hand", "Urine leak", "Urine bag on the floor",
-      "Crutches not appropriate distance", "Bed height not appropriate", "Bed side rails not elevated",
-      "Non grip slippers", "Inappropriate medication", "Wrong flow rate",
-      "Presence of medication bottle", "Presence of medication on the table", "Oxygen tubing on the table",
-      "Paediatric patient should not be present", "Neonate patient should not be present"
+      "Door open", "Empty masks box", "No disposable gowns", "No hand sanitizer", 
+      "Overflowing trash", "Inappropriate disposal of clinical waste", "Empty tissue dispenser", "Overflowing sharps bin", 
+      "Medication on table", "High risk medication on the table", "Table at the foot of the bed",
+      "Not bare below the elbows", "Appropriate level of jewelry", "Not wearing gloves", "Loose Headscarf",
+      "Culturally appropriate sleeves", "Incorrect antibiotic", "Incorrect name",
+      "Calling bell at a distance",
+      "Wrong position of oxygen mask", "IV tubing placement", 
+      "Tourniquet present", "Infection at cannula site", 
+      "Blood pressure cuff functionality issue", "Cannula not closed",
+      "Cannula not functional", "Wrong patient ID", 
+      "Not Connected", "Urine leak", "Urine bag on the floor",
+      "Crutches at a distance", "Bed height too high", 
+      "Bed side rails not elevated",
+      "Non grip slippers present", "Syringe pump paused",
+      "Patient's medication bottle on the table", "Presence of medication on the table", 
+      "Presence of a paediatric patient", "Presence of a neonatal patient", 
+      "Presence of an adult patient"
     ]);
 
     const minusHalfSet = new Set([
-      "Door closed", "Wrong type of door", "No non-sterile gowns", "Appropriate disposal of clinical waste",
-      "Appropriate Attire", "Appropriate Jewelry", "Wearing colour", "Culturally appropriate sleeves",
-      "Appropriate antibiotic", "Correct name", "Blood Pressure cuff present", "Cannula present",
-      "Connected", "Wrong type of urine bag", "None identified", "Slippers present",
-      "Syringe pump paused", "Presence of telephone", "Presence of medication in the cup",
-      "Another patient should not be present", "A second bed should not be present"
+      "Door closed", "Wrong type of door", "No sterile gowns", "No sterile gloves", 
+      "Appropriate disposal of clinical waste", "Food on the table", "Table at the foot of the bed", 
+      "Wearing scrubs", "Wearing colour",
+      "Correct antibiotic", "Not an antibiotic", "Correct name",
+      "Socket at a distance", "Wrong type of oxygen mask", "Blood stained clothes",
+      "Wrong blood group", "Wrong name", "Wrong date of birth",
+      "Connected", "Wrong hand", "Wrong type of urine bag", 
+      "Not identified", "Bed height appropriate", "Bed height too low", 
+      "Appropriate slippers", "Wrong type of fluid", "Wrong flow rate",
+      "Telephone at a distance", "Presence of medication in the cup", "Oxygen tubing on the table",
+      "Presence of a second bed"
     ]);
 
     function updateScore() {
@@ -154,7 +162,7 @@
         if (plusOneSet.has(sel.value)) score += 1;
         if (minusHalfSet.has(sel.value)) score -= 0.5;
       });
-      socket.emit('updateScore', { group: 'group1', score });
+      socket.emit('updateScore', { group: 'group15', score });
     }
 
     function createSelect(name, options, colClass) {
@@ -238,27 +246,27 @@
 
     const room1 = {
       "Doors": ["Door open", "Door closed", "Wrong type of door"],
-      "Trolley": ["Empty masks box", "No non-sterile gowns", "No sterile gloves", "No sterile gowns", "No antiseptic wipes/handgel"],
-      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue box"],
-      "Bed End Table": ["Food on the table", "Overflowing sharps bin", "Medication on table", "High risk medication on the table"]
+      "Trolley": ["Empty masks box", "No disposable gowns", "No sterile gloves", "No sterile gowns", "No hand sanitizer"],
+      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue dispenser"],
+      "Bed End Table": ["Food on the table", "Overflowing sharps bin", "Medication on table", "High risk medication on the table", "Table at the foot of the bed"]
     };
 
     const room2 = {
-      "Nurse": ["Appropriate Attire", "Not bare below the elbow", "Appropriate Jewelry", "Not wearing gloves", "Loose Headscarf", "Wearing colour", "Culturally appropriate sleeves"],
-      "Antibiotic": ["Appropriate antibiotic", "Not appropriate antibiotic", "Not an antibiotic"],
-      "Sign on Bed": ["Correct name", "Incorrect name", "Calling bell location", "Socket locations"]
+      "Nurse": ["Wearing scrubs", "Not bare below the elbows", "Appropriate level of jewelry", "Not wearing gloves", "Loose Headscarf", "Wearing colour", "Culturally appropriate sleeves"],
+      "Antibiotic": ["Correct antibiotic", "Incorrect antibiotic", "Not an antibiotic"],
+      "Sign on Bed": ["Correct name", "Incorrect name", "Calling bell at a distance", "Socket at a distance"]
     };
 
     const bed = {
-      "Patient's Head": ["Inappropriate oxygen mask", "Inappropriate position of oxygen mask", "IV tubing location", "Blood stained clothes"],
-      "Left Arm": ["Blood Pressure cuff present", "Tourniquet present", "Cannula present", "Infection at cannula site", "Cannula not closed"],
-      "Blood Unit": ["Wrong blood group", "Wrong name", "Wrong DOB", "Wrong patient ID"],
+      "Patient's Head": ["Wrong type of oxygen mask", "Wrong position of oxygen mask", "IV tubing placement", "Blood stained clothes"],
+      "Left Arm": ["Blood pressure cuff functionality issue", "Tourniquet present", "Cannula not functional", "Infection at cannula site", "Cannula not closed"],
+      "Blood Unit": ["Wrong blood group", "Wrong name", "Wrong date of birth", "Wrong patient ID"],
       "Oxygen Probe": ["Connected", "Not Connected", "Wrong hand"],
       "Catheter": ["Urine leak", "Urine bag on the floor", "Wrong type of urine bag"],
-      "Fall Risk": ["None identified", "Crutches not appropriate distance", "Bed height not appropriate", "Bed side rails not elevated", "Non grip slippers", "Slippers present"],
-      "Fluids": ["Syringe pump paused", "Inappropriate medication", "Wrong flow rate"],
-      "Bedside Cupboard": ["Presence of telephone", "Presence of medication in the cup", "Presence of medication bottle", "Presence of medication on the table", "Oxygen tubing on the table"],
-      "Second Patient": ["Paediatric patient should not be present", "Neonate patient should not be present", "Another patient should not be present", "A second bed should not be present"]
+      "Fall Risk": ["Not identified", "Crutches at a distance", "Bed height too high", "Bed height appropriate", "Bed height too low", "Bed side rails not elevated", "Non grip slippers present", "Appropriate slippers"],
+      "Fluids": ["Syringe pump paused", "Wrong type of fluid", "Wrong flow rate"],
+      "Bedside Cupboard": ["Telephone at a distance", "Presence of medication in the cup", "Patient's medication bottle on the table", "Presence of medication on the table", "Oxygen tubing on the table"],
+      "Second Patient": ["Presence of a paediatric patient", "Presence of a neonate patient", "Presence of an adult patient", "Presence of a second bed"]
     };
 
     createRoom(room1, 'room1');
