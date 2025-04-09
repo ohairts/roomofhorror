@@ -120,6 +120,10 @@
       }
     }
   </style>
+  <audio id="thunder-audio" preload="auto">
+    <source src="thunder.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
 </head>
 <body>
   <div class="bats"></div>
@@ -131,12 +135,18 @@
       <div class="subtitle">Are you brave enough to enter?</div>
       <div class="button-container">
         <button class="enter-button" onclick="enterRoom()">Enter the Room</button>
-
         <script>
           function enterRoom() {
-            window.location.href = 'https://roomofhorror.onrender.com/getGroup';
-  }
-        </script>        
+            const thunder = document.getElementById('thunder-audio');
+            thunder.play().catch(e => {
+              console.warn("Audio playback failed:", e);
+            });
+        
+            setTimeout(() => {
+              window.location.href = 'https://roomofhorror.onrender.com/getGroup';
+            }, 2800); // Give the thunder a moment before redirecting
+          }
+        </script>   
       </div>
     </div>
   </div>

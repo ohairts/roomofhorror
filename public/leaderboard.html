@@ -260,6 +260,9 @@
         </thead>
         <tbody></tbody>
       </table>
+      <p style="font-family: 'Lobster', cursive; font-size: 1.1em; margin-top: 0.5rem; color: #333;">
+        Note: Maximum points = 39
+      </p>   
     </div>
 
     <div class="stopwatch">
@@ -291,7 +294,6 @@
       for (const group in data) {
         plusOneSetCounts[group] = data[group].plusOneSet || 0;
         minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
-        selectionTotals[group] = (data[group].plusOneSet || 0) + (data[group].minusHalfSet || 0);
       }
     });
 
@@ -383,65 +385,81 @@
     }
 
     function maybeShowOtherAwards() {
-      if (!incorrectAwardShown) {
-        const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
-        if (worstGroup) {
-          incorrectAwardShown = true;
-          showIncorrectAward(worstGroup[0]);
-        }
-      }
+  if (!incorrectAwardShown) {
+    const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
+    if (worstGroup) {
+      incorrectAwardShown = true;
+      showIncorrectAward(worstGroup[0]);
+    }
+  }
 
-      if (!selectionAwardShown) {
-        const indecisiveGroup = Object.entries(selectionTotals).sort((a, b) => b[1] - a[1])[0];
-        if (indecisiveGroup) {
-          selectionAwardShown = true;
-          showSelectionAward(indecisiveGroup[0]);
-        }
-      }
+  if (!selectionAwardShown) {
+    const selectionCounts = {};
+    for (const group in plusOneSetCounts) {
+      const plus = plusOneSetCounts[group] || 0;
+      const minus = minusHalfSetCounts[group] || 0;
+      selectionCounts[group] = plus + minus;
     }
 
-    let time = 0;
-    let interval = null;
-    let running = false;
-
-    function updateDisplay() {
-      const minutes = String(Math.floor(time / 60)).padStart(2, '0');
-      const seconds = String(time % 60).padStart(2, '0');
-      document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    const mostSelectionsGroup = Object.entries(selectionCounts).sort((a, b) => b[1] - a[1])[0];
+    if (mostSelectionsGroup) {
+      selectionAwardShown = true;
+      showSelectionAward(mostSelectionsGroup[0]);
     }
+  }
+}
 
-    function startTimer() {
-      if (!interval) {
-        interval = setInterval(() => {
-          if (running) {
-            time++;
-            updateDisplay();
 
-            if (time === 900) {  // 15 minutes
-              if (!blueRibbonShown) {
-                const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-                if (topGroup) {
-                  blueRibbonShown = true;
-                  showBlueRibbon(topGroup);
-                  maybeShowOtherAwards();
-                }
-              }
-            }
+let countdown = 900; // 15 minutes in seconds
+let interval = null;
+let running = false;
+
+function updateDisplay() {
+  const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
+  const seconds = String(countdown % 60).padStart(2, '0');
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = `${minutes}:${seconds}`;
+
+  // Flashing red with 1 minute left
+  if (countdown <= 60) {
+    timerEl.style.color = countdown % 2 === 0 ? 'darkred' : '#ff0000';
+  } else {
+    timerEl.style.color = 'darkred';
+  }
+}
+
+function startTimer() {
+  if (!interval) {
+    interval = setInterval(() => {
+      if (running && countdown > 0) {
+        countdown--;
+        updateDisplay();
+
+        if (countdown === 0 && !blueRibbonShown) {
+          const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+          if (topGroup) {
+            blueRibbonShown = true;
+            showBlueRibbon(topGroup);
+            maybeShowOtherAwards();
           }
-        }, 1000);
+        }
       }
-      running = true;
-    }
+    }, 1000);
+  }
+  running = true;
+}
+
 
     function toggleTimer() {
       running = !running;
     }
 
     function resetTimer() {
-      time = 0;
-      updateDisplay();
-      running = false;
-    }
+  countdown = 900;
+  updateDisplay();
+  running = false;
+}
+
 
     window.onload = startTimer;
 
