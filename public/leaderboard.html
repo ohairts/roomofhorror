@@ -281,6 +281,7 @@
     let blueRibbonShown = false;
     let incorrectAwardShown = false;
     let selectionAwardShown = false;
+    let selectionDataReady = false;
 
     const socket = io('https://roomofhorror.onrender.com');
     const groupRows = {};
@@ -295,6 +296,7 @@
         plusOneSetCounts[group] = data[group].plusOneSet || 0;
         minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
       }
+      selectionDataReady = true;
     });
 
     socket.on('scoreUpdate', (updates) => {
@@ -435,14 +437,14 @@ function startTimer() {
         countdown--;
         updateDisplay();
 
-        if (countdown === 0 && !blueRibbonShown) {
-          const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-          if (topGroup) {
-            blueRibbonShown = true;
-            showBlueRibbon(topGroup);
-            maybeShowOtherAwards();
-          }
-        }
+        if (countdown === 0 && selectionDataReady && !blueRibbonShown) {
+  const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (topGroup) {
+    blueRibbonShown = true;
+    showBlueRibbon(topGroup);
+    maybeShowOtherAwards();
+  }
+}
       }
     }, 1000);
   }
