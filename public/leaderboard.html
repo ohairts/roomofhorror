@@ -283,227 +283,227 @@
   </div>
 
   <div id="awards-container"></div>
+<script>
+  let blueRibbonShown = false;
+  let incorrectAwardShown = false;
+  let selectionAwardShown = false;
+  let selectionDataReady = false;
 
-  <script>
-    let blueRibbonShown = false;
-    let incorrectAwardShown = false;
-    let selectionAwardShown = false;
-    let selectionDataReady = false;
+  const socket = io('https://roomofhorror.onrender.com');
+  const groupRows = {};
+  const tbody = document.querySelector("tbody");
 
-    const socket = io('https://roomofhorror.onrender.com');
-    const groupRows = {};
-    const tbody = document.querySelector("tbody");
+  let plusOneSetCounts = {};
+  let minusHalfSetCounts = {};
+  let selectionTotals = {};
 
-    let plusOneSetCounts = {};
-    let minusHalfSetCounts = {};
-    let selectionTotals = {};
+  socket.on('selectionData', (data) => {
+    for (const group in data) {
+      plusOneSetCounts[group] = data[group].plusOneSet || 0;
+      minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
+    }
+    selectionDataReady = true;
+  });
 
-    socket.on('selectionData', (data) => {
-      for (const group in data) {
-        plusOneSetCounts[group] = data[group].plusOneSet || 0;
-        minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
+  socket.on('scoreUpdate', (updates) => {
+    for (const group in updates) {
+      const score = updates[group];
+      if (!group.startsWith('group') || typeof score !== 'number') continue;
+
+      if (!groupRows[group]) {
+        const number = group.replace('group', '');
+        groupRows[group] = { name: `Group ${number}`, score: 0 };
       }
-      selectionDataReady = true;
+
+      groupRows[group].score = score;
+
+      if (score === 39 && !blueRibbonShown) {
+        blueRibbonShown = true;
+        showBlueRibbon(group);
+        maybeShowOtherAwards(true);
+      }
+    }
+
+    renderLeaderboard();
+  });
+
+  function renderLeaderboard() {
+    const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
+    const existingRows = [...tbody.children];
+
+    sorted.forEach(([groupKey, { name, score }], index) => {
+      let row = document.getElementById(groupKey + "-row");
+      if (!row) {
+        row = document.createElement("tr");
+        row.id = groupKey + "-row";
+        row.style.opacity = 0;
+        setTimeout(() => (row.style.opacity = 1), 50);
+      }
+
+      row.innerHTML = `
+        <td>${index + 1}${getOrdinalSuffix(index + 1)} Place</td>
+        <td>${name}</td>
+        <td id="${groupKey}-score">${score}</td>
+      `;
+      tbody.appendChild(row);
     });
 
-    socket.on('scoreUpdate', (updates) => {
-      for (const group in updates) {
-        const score = updates[group];
-        if (!group.startsWith('group') || typeof score !== 'number') continue;
-
-        if (!groupRows[group]) {
-          const number = group.replace('group', '');
-          groupRows[group] = { name: `Group ${number}`, score: 0 };
-        }
-
-        groupRows[group].score = score;
-
-        if (score === 39 && !blueRibbonShown) {
-          blueRibbonShown = true;
-          showBlueRibbon(group);
-          maybeShowOtherAwards();
-        }
-      }
-
-      renderLeaderboard();
+    existingRows.forEach(row => {
+      const key = row.id?.replace("-row", "");
+      if (!groupRows[key]) row.remove();
     });
+  }
 
-    function renderLeaderboard() {
-      const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
-      const existingRows = [...tbody.children];
+  function getOrdinalSuffix(i) {
+    const j = i % 10, k = i % 100;
+    if (j == 1 && k != 11) return "st";
+    if (j == 2 && k != 12) return "nd";
+    if (j == 3 && k != 13) return "rd";
+    return "th";
+  }
 
-      sorted.forEach(([groupKey, { name, score }], index) => {
-        let row = document.getElementById(groupKey + "-row");
-        if (!row) {
-          row = document.createElement("tr");
-          row.id = groupKey + "-row";
-          row.style.opacity = 0;
-          setTimeout(() => (row.style.opacity = 1), 50);
+  function showBlueRibbon(groupKey) {
+    const container = document.getElementById('awards-container');
+    container.innerHTML += `
+      <div class="award first-place">
+        <img src="firstplacepic.png" alt="Blue Ribbon" />
+        <span>🏆 1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
+      </div>
+    `;
+  }
+
+  function showIncorrectAward(groupKey) {
+    const container = document.getElementById('awards-container');
+    container.innerHTML += `
+      <div class="award most-incorrect">
+        <img src="mostincorrectpic.png" alt="Court Jester" />
+        <span>🃏 MOST INCORRECT ANSWERS - ${groupRows[groupKey]?.name || groupKey}</span>
+      </div>
+    `;
+  }
+
+  function showSelectionAward(groupKey) {
+    const container = document.getElementById('awards-container');
+    container.innerHTML += `
+      <div class="award most-selections">
+        <img src="noideapic.png" alt="Confused Person" />
+        <span>🤯 MOST SELECTIONS MADE - ${groupRows[groupKey]?.name || groupKey}</span>
+      </div>
+    `;
+  }
+
+  function maybeShowOtherAwards(triggeringGroupReached39 = false) {
+    if (!selectionDataReady) return;
+
+    // 🔹 Most Incorrect = lowest scoring group
+    if (!incorrectAwardShown) {
+      const sortedGroups = Object.entries(groupRows).sort((a, b) => a[1].score - b[1].score);
+      const worstGroup = sortedGroups[0]?.[0];
+      if (worstGroup) {
+        incorrectAwardShown = true;
+        showIncorrectAward(worstGroup);
+      }
+    }
+
+    // 🤯 Most Selections = most combined mouseDowns
+    if (!selectionAwardShown) {
+      const selectionCounts = {};
+      for (const group in plusOneSetCounts) {
+        const plus = plusOneSetCounts[group] || 0;
+        const minus = minusHalfSetCounts[group] || 0;
+        selectionCounts[group] = plus + minus;
+      }
+
+      const mostSelectionsGroup = Object.entries(selectionCounts).sort((a, b) => b[1] - a[1])[0];
+      if (mostSelectionsGroup) {
+        selectionAwardShown = true;
+        showSelectionAward(mostSelectionsGroup[0]);
+      }
+    }
+  }
+
+  let countdown = 15;
+  let interval = null;
+  let running = false;
+
+  function updateDisplay() {
+    const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
+    const seconds = String(countdown % 60).padStart(2, '0');
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = `${minutes}:${seconds}`;
+
+    if (countdown <= 60) {
+      timerEl.style.color = countdown % 2 === 0 ? 'darkred' : '#ff0000';
+    } else {
+      timerEl.style.color = 'darkred';
+    }
+  }
+
+  function startTimer() {
+    if (!interval) {
+      interval = setInterval(() => {
+        if (running && countdown > 0) {
+          countdown--;
+          updateDisplay();
+
+          if (countdown === 0) {
+            if (selectionDataReady) {
+              if (!blueRibbonShown) {
+                const sorted = Object.entries(groupRows).sort((a, b) => b[1].score - a[1].score);
+                const topGroup = sorted[0]?.[0];
+                if (topGroup) {
+                  blueRibbonShown = true;
+                  showBlueRibbon(topGroup);
+                }
+              }
+
+              maybeShowOtherAwards(false);
+            }
+
+            const thunder = document.getElementById('thunder-sound');
+            if (thunder) thunder.play();
+
+            const bat = document.getElementById('bat');
+            if (bat) {
+              bat.style.display = 'block';
+              setTimeout(() => bat.style.display = 'none', 3000);
+            }
+          }
         }
-
-        row.innerHTML = `
-          <td>${index + 1}${getOrdinalSuffix(index + 1)} Place</td>
-          <td>${name}</td>
-          <td id="${groupKey}-score">${score}</td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      existingRows.forEach(row => {
-        const key = row.id?.replace("-row", "");
-        if (!groupRows[key]) row.remove();
-      });
+      }, 1000);
     }
-
-    function getOrdinalSuffix(i) {
-      const j = i % 10, k = i % 100;
-      if (j == 1 && k != 11) return "st";
-      if (j == 2 && k != 12) return "nd";
-      if (j == 3 && k != 13) return "rd";
-      return "th";
-    }
-
-    function showBlueRibbon(groupKey) {
-      const container = document.getElementById('awards-container');
-      container.innerHTML += `
-        <div class="award first-place">
-          <img src="firstplacepic.png" alt="Blue Ribbon" />
-          <span>🏆 1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
-        </div>
-      `;
-    }
-
-    function showIncorrectAward(groupKey) {
-      const container = document.getElementById('awards-container');
-      container.innerHTML += `
-        <div class="award most-incorrect">
-          <img src="mostincorrectpic.png" alt="Court Jester" />
-          <span>🃏 MOST INCORRECT ANSWERS - ${groupRows[groupKey]?.name || groupKey}</span>
-        </div>
-      `;
-    }
-
-    function showSelectionAward(groupKey) {
-      const container = document.getElementById('awards-container');
-      container.innerHTML += `
-        <div class="award most-selections">
-          <img src="noideapic.png" alt="Confused Person" />
-          <span>🤯 MOST SELECTIONS MADE - ${groupRows[groupKey]?.name || groupKey}</span>
-        </div>
-      `;
-    }
-
-    function maybeShowOtherAwards() {
-  if (!incorrectAwardShown) {
-    const worstGroup = Object.entries(minusHalfSetCounts).sort((a, b) => b[1] - a[1])[0];
-    if (worstGroup) {
-      incorrectAwardShown = true;
-      showIncorrectAward(worstGroup[0]);
-    }
+    running = true;
   }
 
-  if (!selectionAwardShown) {
-    const selectionCounts = {};
-    for (const group in plusOneSetCounts) {
-      const plus = plusOneSetCounts[group] || 0;
-      const minus = minusHalfSetCounts[group] || 0;
-      selectionCounts[group] = plus + minus;
+  function toggleTimer() {
+    running = !running;
+  }
+
+  function resetTimer() {
+    countdown = 15;
+    updateDisplay();
+    running = false;
+  }
+
+  window.onload = () => {
+    updateDisplay();
+    startTimer();
+  };
+
+  document.getElementById('reset-button').addEventListener('click', async () => {
+    const confirmReset = confirm("Are you sure you want to reset all groups and scores?");
+    if (!confirmReset) return;
+
+    try {
+      const res = await fetch('/reset');
+      const text = await res.text();
+      alert(text);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reset. Please try again.");
     }
-
-    const mostSelectionsGroup = Object.entries(selectionCounts).sort((a, b) => b[1] - a[1])[0];
-    if (mostSelectionsGroup) {
-      selectionAwardShown = true;
-      showSelectionAward(mostSelectionsGroup[0]);
-    }
-  }
-}
-
-let countdown = 15; // 15 minutes in seconds
-let interval = null;
-let running = false;
-
-function updateDisplay() {
-  const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
-  const seconds = String(countdown % 60).padStart(2, '0');
-  const timerEl = document.getElementById('timer');
-  timerEl.textContent = `${minutes}:${seconds}`;
-
-  // Flashing red with 1 minute left
-  if (countdown <= 60) {
-    timerEl.style.color = countdown % 2 === 0 ? 'darkred' : '#ff0000';
-  } else {
-    timerEl.style.color = 'darkred';
-  }
-}
-
-function startTimer() {
-  if (!interval) {
-    interval = setInterval(() => {
-      if (running && countdown > 0) {
-        countdown--;
-        updateDisplay();
-
-        if (countdown === 0) {
-  if (selectionDataReady && !blueRibbonShown) {
-    const topGroup = Object.entries(plusOneSetCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (topGroup) {
-      blueRibbonShown = true;
-      showBlueRibbon(topGroup);
-    }
-  }
-
-  // 🎉 Trigger thunder and bat
-  const thunder = document.getElementById('thunder-sound');
-  if (thunder) thunder.play();
-
-  const bat = document.getElementById('bat');
-  if (bat) {
-    bat.style.display = 'block';
-    setTimeout(() => bat.style.display = 'none', 3000);
-  }
-
-  maybeShowOtherAwards();
-}
-
-      }
-    }, 1000);
-  }
-  running = true;
-}
-
-
-    function toggleTimer() {
-      running = !running;
-    }
-
-    function resetTimer() {
-  countdown = 15;
-  updateDisplay();
-  running = false;
-}
-
-
-    window.onload = startTimer;
-    window.onload = () => {
-  updateDisplay();
-  startTimer();
-};
-
-
-    document.getElementById('reset-button').addEventListener('click', async () => {
-      const confirmReset = confirm("Are you sure you want to reset all groups and scores?");
-      if (!confirmReset) return;
-
-      try {
-        const res = await fetch('/reset');
-        const text = await res.text();
-        alert(text);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to reset. Please try again.");
-      }
-    });
-  </script>
+  });
+</script>
   <audio id="thunder-sound" src="thunder.mp3" preload="auto"></audio>
   <img id="bat" src="bat.gif" style="display:none; position:fixed; top:10%; left:40%; width:80px; z-index:9999; animation: flap 2s ease-in-out infinite;" />  
 </body>
