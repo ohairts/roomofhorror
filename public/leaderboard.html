@@ -1,4 +1,3 @@
-<!-- FULL FIXED ROOM OF HORROR LEADERBOARD HTML -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,9 +9,234 @@
   <link href="https://fonts.googleapis.com/css2?family=Butcherman&display=swap" rel="stylesheet">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    /* styles unchanged, omitting for brevity — keep your existing CSS */
-    /* ... all your CSS remains here ... */
-  </style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: sans-serif;
+      background-color: #bdfcc9;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      width: 95%;
+      max-width: 960px;
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
+
+    .leaderboard {
+      flex: 1;
+      text-align: center;
+    }
+
+    .curved-title-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 1rem 1rem 0.2rem;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+    }
+
+    .curved-title {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      flex-wrap: nowrap;
+      font-family: 'Creepster', cursive;
+      font-size: 4em;
+      color: darkred;
+      white-space: nowrap;
+      overflow: visible;
+      line-height: 1.2;
+      padding: 0 2vw;
+    }
+
+    .curved-title span {
+      display: inline-block;
+      transform-origin: bottom center;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 15px darkred,
+        0 0 20px darkred,
+        0 0 25px darkred;
+      padding: 0 2px;
+      position: relative;
+    }
+
+    .curved-title span:nth-child(1) { transform: rotate(-18deg); top: 10px; }
+    .curved-title span:nth-child(2) { transform: rotate(-13deg); top: 8px; }
+    .curved-title span:nth-child(3) { transform: rotate(-8deg); top: 6px; }
+    .curved-title span:nth-child(4) { transform: rotate(-5deg); top: 4px; }
+    .curved-title span:nth-child(5) { transform: rotate(0deg); top: 2px; }
+    .curved-title span:nth-child(6) { transform: rotate(3deg); top: 2px; }
+    .curved-title span:nth-child(7) { transform: rotate(6deg); top: 3px; }
+    .curved-title span:nth-child(8) { transform: rotate(9deg); top: 5px; }
+    .curved-title span:nth-child(9) { transform: rotate(12deg); top: 7px; }
+    .curved-title span:nth-child(10) { transform: rotate(15deg); top: 9px; }
+    .curved-title span:nth-child(11) { transform: rotate(18deg); top: 10px; }
+    .curved-title span:nth-child(12) { transform: rotate(20deg); top: 11px; }
+    .curved-title span:nth-child(13) { transform: rotate(22deg); top: 12px; }
+    .curved-title span:nth-child(14) { transform: rotate(24deg); top: 13px; }
+
+    h2 {
+      font-size: 2.2em;
+      font-family: 'Butcherman', cursive;
+      text-transform: uppercase;
+      color: #0b5309;
+      text-shadow: 0 0 4px white, 0 0 8px #2ed573, 0 0 12px #0b5309, 0 0 16px #0b5309;
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      border-collapse: collapse;
+      font-family: 'Lobster', cursive;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 0.95em;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f5f5dc;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #ffcc99;
+    }
+
+    .stopwatch {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-top: 3vh;
+      font-family: 'Creepster', cursive;
+      color: darkred;
+      text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px darkred;
+      font-size: 1.8em;
+    }
+
+    .stopwatch-controls button {
+      background-color: #333;
+      color: white;
+      border-radius: 4px;
+      font-size: 0.6em;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      margin-top: 5px;
+    }
+
+    .stopwatch-controls button:hover {
+      background-color: #555;
+    }
+
+    .reset-button {
+      margin-top: 1vh;
+      padding: 0.6em 1.5em;
+      font-size: 0.5em;
+      font-family: 'Lobster', cursive;
+      background-color: darkred;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px red;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .reset-button:hover {
+      background-color: crimson;
+      transform: scale(1.05);
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes pulseGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.award {
+  position: fixed;
+  max-width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  animation: pulseGlow 2.5s infinite, floatUp 1.5s ease-out forwards;
+  font-family: 'Lobster', cursive;
+  text-align: center;
+  z-index: 9999;
+}
+
+.award img {
+  max-width: 100px;
+  display: block;
+  margin: 0 auto;
+}
+
+.award span {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: darkred;
+  text-shadow: 1px 1px #fff;
+}
+
+.award.first-place {
+  top: 20px;
+  right: 20px;
+}
+
+.award.most-incorrect {
+  bottom: 20px;
+  right: 20px;
+}
+
+.award.most-selections {
+  bottom: 20px;
+  left: 20px;
+}
+
+</style>
 </head>
 <body>
   <div class="curved-title-wrapper">
