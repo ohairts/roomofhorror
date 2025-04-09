@@ -422,7 +422,7 @@
     }
   }
 
-  let countdown = 15;
+  let countdown = 15 * 60;
   let interval = null;
   let running = false;
 
@@ -480,7 +480,7 @@
   }
 
   function resetTimer() {
-    countdown = 15;
+    countdown = 15 * 60;
     updateDisplay();
     running = false;
   }
