@@ -295,7 +295,7 @@
 
   let plusOneSetCounts = {};
   let minusHalfSetCounts = {};
-  let selectionTotals = {};
+  let mouseDownCounts = {}; // 🆕 tracks total mousedown counts
 
   socket.on('selectionData', (data) => {
     for (const group in data) {
@@ -303,6 +303,10 @@
       minusHalfSetCounts[group] = data[group].minusHalfSet || 0;
     }
     selectionDataReady = true;
+  });
+
+  socket.on('mouseDownData', (data) => {
+    mouseDownCounts = data; // 🆕 live update from server
   });
 
   socket.on('scoreUpdate', (updates) => {
@@ -405,19 +409,13 @@
       }
     }
 
-    // 🤯 Most Selections = most combined mouseDowns
+    // 🤯 Most Selections = most raw mouseDowns from socket
     if (!selectionAwardShown) {
-      const selectionCounts = {};
-      for (const group in plusOneSetCounts) {
-        const plus = plusOneSetCounts[group] || 0;
-        const minus = minusHalfSetCounts[group] || 0;
-        selectionCounts[group] = plus + minus;
-      }
-
-      const mostSelectionsGroup = Object.entries(selectionCounts).sort((a, b) => b[1] - a[1])[0];
-      if (mostSelectionsGroup) {
+      const sortedMouseGroups = Object.entries(mouseDownCounts).sort((a, b) => b[1] - a[1]);
+      const mostClickedGroup = sortedMouseGroups[0]?.[0];
+      if (mostClickedGroup) {
         selectionAwardShown = true;
-        showSelectionAward(mostSelectionsGroup[0]);
+        showSelectionAward(mostClickedGroup);
       }
     }
   }
@@ -480,7 +478,7 @@
   }
 
   function resetTimer() {
-    countdown = 15 * 60;
+    countdown = 15;  // * 60 for 15 minutes
     updateDisplay();
     running = false;
   }
@@ -505,6 +503,6 @@
   });
 </script>
   <audio id="thunder-sound" src="thunder.mp3" preload="auto"></audio>
-  <img id="bat" src="bat.gif" style="display:none; position:fixed; top:10%; left:40%; width:80px; z-index:9999; animation: flap 2s ease-in-out infinite;" />  
+  <img id="bat" src="bat.gif" style="display:none; position:fixed; top:10%; left:40%; width:150px; z-index:9999; animation: flap 2s ease-in-out infinite;" />  
 </body>
 </html>

@@ -73,7 +73,7 @@
         <!-- Room 1 -->
         <div class="table-section" style="background-color: #fffdd0;">
           <table class="equal-width">
-            <tr><th colspan="4" class="room-heading">Room 1</th></tr>
+            <tr><th colspan="3" class="room-heading">Room 1</th></tr>
             <tr id="room1-labels"></tr>
             <tr id="room1-row-0"></tr>
             <tr id="room1-row-1"></tr>
@@ -88,7 +88,7 @@
         <!-- Room 2 -->
         <div class="table-section" style="background-color: #dceeff;">
           <table class="equal-width">
-            <tr><th colspan="3" class="room-heading">Room 2</th></tr>
+            <tr><th colspan="4" class="room-heading">Room 2</th></tr>
             <tr id="room2-labels"></tr>
             <tr id="room2-row-0"></tr>
             <tr id="room2-row-1"></tr>
@@ -120,7 +120,7 @@
 
   <script>
     const socket = io('https://roomofhorror.onrender.com');
-
+  
     const plusOneSet = new Set([
       "Door open", "Empty masks box", "No disposable gowns", "No hand sanitizer", 
       "Overflowing trash", "Inappropriate disposal of clinical waste", "Empty tissue dispenser", "Overflowing sharps bin", 
@@ -140,7 +140,7 @@
       "Presence of a paediatric patient", "Presence of a neonatal patient", 
       "Presence of an adult patient"
     ]);
-
+  
     const minusHalfSet = new Set([
       "Door closed", "Wrong type of door", "No sterile gowns", "No sterile gloves", 
       "Appropriate disposal of clinical waste", "Food on the table", "Table at the foot of the bed", 
@@ -154,7 +154,7 @@
       "Telephone at a distance", "Presence of medication in the cup", "Oxygen tubing on the table",
       "Presence of a second bed"
     ]);
-
+  
     function updateScore() {
       const selects = document.querySelectorAll('select');
       let score = 0;
@@ -162,40 +162,42 @@
         if (plusOneSet.has(sel.value)) score += 1;
         if (minusHalfSet.has(sel.value)) score -= 0.5;
       });
-      socket.emit('updateScore', { group: 'group1', score });
+  
+      const cappedScore = Math.min(score, 39);
+      socket.emit('updateScore', { group: 'group1', score: cappedScore });
     }
-
+  
     function createSelect(name, options, colClass) {
       const select = document.createElement('select');
       select.name = name;
       select.classList.add(colClass);
-
+  
       const blank = document.createElement('option');
       blank.value = '';
       blank.textContent = '';
       select.appendChild(blank);
-
+  
       options.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt;
         option.textContent = opt;
         select.appendChild(option);
       });
-
+  
       select.addEventListener('change', () => {
         updateDropdowns(colClass, options);
         updateScore();
       });
-
+  
       return select;
     }
-
+  
     function updateDropdowns(colClass, options) {
       const selects = document.querySelectorAll(`.${colClass}`);
       const selectedValues = Array.from(selects)
         .map(s => s.value)
         .filter(v => v);
-
+  
       selects.forEach(select => {
         const currentValue = select.value;
         select.innerHTML = '';
@@ -203,7 +205,7 @@
         blank.value = '';
         blank.textContent = '';
         select.appendChild(blank);
-
+  
         options.forEach(opt => {
           if (!selectedValues.includes(opt) || opt === currentValue) {
             const option = document.createElement('option');
@@ -212,51 +214,49 @@
             select.appendChild(option);
           }
         });
-
+  
         select.value = currentValue;
       });
     }
-
+  
     function createRoom(columns, prefix) {
       const labelsRow = document.getElementById(`${prefix}-labels`);
       const rows = Array.from({ length: 7 }, (_, i) => document.getElementById(`${prefix}-row-${i}`));
       const colKeys = Object.keys(columns);
-
+  
       colKeys.forEach((label, colIndex) => {
         const options = columns[label];
         const colClass = `${prefix}-col-${colIndex}`;
-
+  
         const labelCell = document.createElement('td');
         labelCell.textContent = label;
         labelCell.classList.add('room-label');
         labelsRow.appendChild(labelCell);
-
+  
         rows.forEach((row, rowIndex) => {
           const cell = document.createElement('td');
           const select = createSelect(`${prefix}-${label}-${rowIndex}`, options, colClass);
           cell.appendChild(select);
           row.appendChild(cell);
         });
-
+  
         updateDropdowns(colClass, options);
       });
     }
-
-    // ROOM DEFINITIONS
-
+  
     const room1 = {
       "Doors": ["Door open", "Door closed", "Wrong type of door"],
       "Trolley": ["Empty masks box", "No disposable gowns", "No sterile gloves", "No sterile gowns", "No hand sanitizer"],
-      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue dispenser"],
       "Bed End Table": ["Food on the table", "Overflowing sharps bin", "Medication on table", "High risk medication on the table", "Table at the foot of the bed"]
     };
-
+  
     const room2 = {
+      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue dispenser"],
       "Nurse": ["Wearing scrubs", "Not bare below the elbows", "Appropriate level of jewelry", "Not wearing gloves", "Loose Headscarf", "Wearing colour", "Culturally appropriate sleeves"],
       "Antibiotic": ["Correct antibiotic", "Incorrect antibiotic", "Not an antibiotic"],
       "Sign on Bed": ["Correct name", "Incorrect name", "Calling bell at a distance", "Socket at a distance"]
     };
-
+  
     const bed = {
       "Patient's Head": ["Wrong type of oxygen mask", "Wrong position of oxygen mask", "IV tubing placement", "Blood stained clothes"],
       "Left Arm": ["Blood pressure cuff functionality issue", "Tourniquet present", "Cannula not functional", "Infection at cannula site", "Cannula not closed"],
@@ -268,10 +268,17 @@
       "Bedside Cupboard": ["Telephone at a distance", "Presence of medication in the cup", "Patient's medication bottle on the table", "Presence of medication on the table", "Oxygen tubing on the table"],
       "Second Patient": ["Presence of a paediatric patient", "Presence of a neonatal patient", "Presence of an adult patient", "Presence of a second bed"]
     };
-
+  
     createRoom(room1, 'room1');
     createRoom(room2, 'room2');
     createRoom(bed, 'bed');
-  </script>
+  
+    // 👇 Track mouseDowns and send them to the server
+    let mouseDowns = 0;
+    document.addEventListener('mousedown', () => {
+      mouseDowns++;
+      socket.emit('mouseDownCount', { group: 'group1', count: mouseDowns });
+    });
+  </script>  
 </body>
 </html>

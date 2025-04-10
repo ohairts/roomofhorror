@@ -73,7 +73,7 @@
         <!-- Room 1 -->
         <div class="table-section" style="background-color: #fffdd0;">
           <table class="equal-width">
-            <tr><th colspan="4" class="room-heading">Room 1</th></tr>
+            <tr><th colspan="3" class="room-heading">Room 1</th></tr>
             <tr id="room1-labels"></tr>
             <tr id="room1-row-0"></tr>
             <tr id="room1-row-1"></tr>
@@ -88,7 +88,7 @@
         <!-- Room 2 -->
         <div class="table-section" style="background-color: #dceeff;">
           <table class="equal-width">
-            <tr><th colspan="3" class="room-heading">Room 2</th></tr>
+            <tr><th colspan="4" class="room-heading">Room 2</th></tr>
             <tr id="room2-labels"></tr>
             <tr id="room2-row-0"></tr>
             <tr id="room2-row-1"></tr>
@@ -162,8 +162,10 @@
         if (plusOneSet.has(sel.value)) score += 1;
         if (minusHalfSet.has(sel.value)) score -= 0.5;
       });
-      socket.emit('updateScore', { group: 'group5', score });
     }
+      const cappedScore = Math.min(score, 39);
+      socket.emit('updateScore', { group: 'group5', 
+      score: cappedScore });
 
     function createSelect(name, options, colClass) {
       const select = document.createElement('select');
@@ -247,11 +249,11 @@
     const room1 = {
       "Doors": ["Door open", "Door closed", "Wrong type of door"],
       "Trolley": ["Empty masks box", "No disposable gowns", "No sterile gloves", "No sterile gowns", "No hand sanitizer"],
-      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue dispenser"],
       "Bed End Table": ["Food on the table", "Overflowing sharps bin", "Medication on table", "High risk medication on the table", "Table at the foot of the bed"]
     };
 
     const room2 = {
+      "Trash bins": ["Overflowing trash", "Inappropriate disposal of clinical waste", "Appropriate disposal of clinical waste", "Empty tissue dispenser"],
       "Nurse": ["Wearing scrubs", "Not bare below the elbows", "Appropriate level of jewelry", "Not wearing gloves", "Loose Headscarf", "Wearing colour", "Culturally appropriate sleeves"],
       "Antibiotic": ["Correct antibiotic", "Incorrect antibiotic", "Not an antibiotic"],
       "Sign on Bed": ["Correct name", "Incorrect name", "Calling bell at a distance", "Socket at a distance"]
@@ -272,4 +274,14 @@
     createRoom(room1, 'room1');
     createRoom(room2, 'room2');
     createRoom(bed, 'bed');
+
+    // 👇 Send mouseDownCount for Most Selections Award
+    let mouseDowns = 0;
+    document.addEventListener('mousedown', () => {
+      mouseDowns++;
+      socket.emit('mouseDownCount', 
+      { group: 'group5', count: mouseDowns }); 
+    });
   </script>
+</body>
+</html>
