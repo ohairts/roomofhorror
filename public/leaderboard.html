@@ -273,7 +273,7 @@
     </div>
 
     <div class="stopwatch">
-      <div id="timer">00:15</div>
+      <div id="timer">15:00</div>
       <div class="stopwatch-controls">
         <button onclick="toggleTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
@@ -478,7 +478,7 @@
   }
 
   function resetTimer() {
-    countdown = 15;  // * 60 for 15 minutes
+    countdown = 15 * 60;  
     updateDisplay();
     running = false;
   }
