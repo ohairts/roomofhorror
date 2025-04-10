@@ -162,11 +162,11 @@
         if (plusOneSet.has(sel.value)) score += 1;
         if (minusHalfSet.has(sel.value)) score -= 0.5;
       });
-    }
+    
       const cappedScore = Math.min(score, 39);
       socket.emit('updateScore', { group: 'group7', 
       score: cappedScore });
-
+    }
     function createSelect(name, options, colClass) {
       const select = document.createElement('select');
       select.name = name;

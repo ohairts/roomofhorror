@@ -162,10 +162,9 @@
         if (plusOneSet.has(sel.value)) score += 1;
         if (minusHalfSet.has(sel.value)) score -= 0.5;
       });
-    }
       const cappedScore = Math.min(score, 39);
-      socket.emit('updateScore', { group: 'group3', 
-      score: cappedScore });
+      socket.emit('updateScore', { group: 'group3', score: cappedScore });
+    }
 
     function createSelect(name, options, colClass) {
       const select = document.createElement('select');
@@ -279,7 +278,7 @@
         let mouseDowns = 0;
     document.addEventListener('mousedown', () => {
       mouseDowns++;
-      socket.emit('mouseDownCount', { group: 'group3', count: mouseDowns }); <!-- 🔁 Change this -->
+      socket.emit('mouseDownCount', { group: 'group3', count: mouseDowns }); 
     });
   </script>
 </body>
