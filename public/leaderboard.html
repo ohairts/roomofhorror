@@ -273,7 +273,7 @@
     </div>
 
     <div class="stopwatch">
-      <div id="timer">15:00</div>
+      <div id="timer">00:15</div>
       <div class="stopwatch-controls">
         <button onclick="toggleTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
@@ -371,7 +371,7 @@
     container.innerHTML += `
       <div class="award first-place">
         <img src="firstplacepic.png" alt="Blue Ribbon" />
-        <span>🏆 1st Place - ${groupRows[groupKey]?.name || groupKey}</span>
+        <span>🏆 THE WINNING WALEEDS - ${groupRows[groupKey]?.name || groupKey}</span>
       </div>
     `;
   }
@@ -381,7 +381,7 @@
     container.innerHTML += `
       <div class="award most-incorrect">
         <img src="mostincorrectpic.png" alt="Court Jester" />
-        <span>🃏 MOST INCORRECT ANSWERS - ${groupRows[groupKey]?.name || groupKey}</span>
+        <span>🃏 THE NOT-RIGHT<br>RAJESHES<br>(Most incorrect selections) - ${groupRows[groupKey]?.name || groupKey}</span>
       </div>
     `;
   }
@@ -391,7 +391,7 @@
     container.innerHTML += `
       <div class="award most-selections">
         <img src="noideapic.png" alt="Confused Person" />
-        <span>🤯 MOST SELECTIONS MADE - ${groupRows[groupKey]?.name || groupKey}</span>
+        <span>🤯 THE PICKIEST PRADEEPS<br>(Most selections made) - ${groupRows[groupKey]?.name || groupKey}</span>
       </div>
     `;
   }
@@ -420,7 +420,7 @@
     }
   }
 
-  let countdown = 15 * 60;
+  let countdown = 15 // * 60;
   let interval = null;
   let running = false;
 
@@ -477,7 +477,7 @@
   }
 
   function resetTimer() {
-    countdown = 15 * 60;  
+    countdown = 15 //* 60;  
     updateDisplay();
     running = false;
   }
