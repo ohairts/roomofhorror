@@ -203,6 +203,7 @@
 .award {
   position: fixed;
   max-width: 200px;
+  max-height: 240px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   padding: 10px;
@@ -241,6 +242,19 @@
 .award.most-selections {
   bottom: 20px;
   left: 20px;
+  max-width: 200px;
+  max-height: 240px;
+  overflow: hidden;
+}
+
+.award.most-selections img {
+  max-width: 100px;
+  height: auto;
+}
+
+.award.most-selections span {
+  font-size: 1.2em;
+  line-height: 1.2;
 }
 
 award.fastest-group {
