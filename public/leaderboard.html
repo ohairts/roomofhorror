@@ -291,7 +291,7 @@ award.fastest-group {
     </div>
 
     <div class="stopwatch">
-      <div id="timer">03:00</div>
+      <div id="timer">15:00</div>
       <div class="stopwatch-controls">
         <button onclick="toggleTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
@@ -418,7 +418,7 @@ award.fastest-group {
     container.innerHTML += `
       <div class="award most-selections">
         <img src="noideapic.png" alt="Confused Person" />
-        <span>THE PICKIEST PRADEEPS<br>(Most selections made) - ${groupRows[groupKey]?.name || groupKey}</span>
+        <span>PICKIEST PRADEEPS<br>(Most selections made) - ${groupRows[groupKey]?.name || groupKey}</span>
       </div>
     `;
   }
@@ -428,7 +428,7 @@ award.fastest-group {
   container.innerHTML += `
     <div class="award speedy-saeeds" style="top: 50px; left: 20px;">
       <img src="fastestgroup.png" alt="Speedy Saeeds" />
-      <span>🚀 The Speedy Saeeds<br>Fastest Group - ${groupRows[groupKey]?.name || groupKey}</span>
+      <span>🚀 SPEEDY SAEEDS<br>Fastest Group - ${groupRows[groupKey]?.name || groupKey}</span>
     </div>
   `;
 }
@@ -457,7 +457,7 @@ award.fastest-group {
     }
   }
 
-  let countdown = 15  * 12 // * 60;
+  let countdown = 15  * 60;
   let interval = null;
   let running = false;
 
@@ -514,7 +514,7 @@ award.fastest-group {
   }
 
   function resetTimer() {
-    countdown = 15 * 12 // * 60;  
+    countdown = 15 * 60;  
     updateDisplay();
     running = false;
   }
