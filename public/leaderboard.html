@@ -243,6 +243,11 @@
   left: 20px;
 }
 
+award.fastest-group {
+  top: 20px;
+  left: 20px;
+}
+
 </style>
 </head>
 <body>
@@ -273,7 +278,7 @@
     </div>
 
     <div class="stopwatch">
-      <div id="timer">15:00</div>
+      <div id="timer">03:00</div>
       <div class="stopwatch-controls">
         <button onclick="toggleTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
@@ -287,7 +292,9 @@
   let blueRibbonShown = false;
   let incorrectAwardShown = false;
   let selectionAwardShown = false;
+  let speedyAwardShown = false;
   let selectionDataReady = false;
+
 
   const socket = io('https://roomofhorror.onrender.com');
   const groupRows = {};
@@ -321,11 +328,18 @@
 
       groupRows[group].score = score;
 
-      if (score === 39 && !blueRibbonShown) {
-        blueRibbonShown = true;
-        showBlueRibbon(group);
-        maybeShowOtherAwards(true);
-      }
+  if (score === 39 && !blueRibbonShown) {
+  blueRibbonShown = true;
+  showBlueRibbon(group);
+
+  // 🏁 Show Speedy Saeeds if time left
+  if (countdown > 0 && !speedyAwardShown) {
+    speedyAwardShown = true;
+    showSpeedySaeedsAward(group);
+  }
+
+  maybeShowOtherAwards(true);
+}
     }
 
     renderLeaderboard();
@@ -396,6 +410,16 @@
     `;
   }
 
+  function showSpeedySaeedsAward(groupKey) {
+  const container = document.getElementById('awards-container');
+  container.innerHTML += `
+    <div class="award speedy-saeeds" style="top: 50px; left: 20px;">
+      <img src="fastestgroup.png" alt="Speedy Saeeds" />
+      <span>🚀 The Speedy Saeeds<br>Fastest Group - ${groupRows[groupKey]?.name || groupKey}</span>
+    </div>
+  `;
+}
+
   function maybeShowOtherAwards(triggeringGroupReached39 = false) {
     if (!selectionDataReady) return;
 
@@ -420,7 +444,7 @@
     }
   }
 
-  let countdown = 15  * 60;
+  let countdown = 15  * 12 // * 60;
   let interval = null;
   let running = false;
 
@@ -477,7 +501,7 @@
   }
 
   function resetTimer() {
-    countdown = 15 * 60;  
+    countdown = 15 * 12 // * 60;  
     updateDisplay();
     running = false;
   }
